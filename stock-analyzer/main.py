@@ -1,8 +1,31 @@
 from trading_advisor import TradingAdvisor
 import time
 from datetime import datetime
+import sys
+import os
+from pathlib import Path
+
+class Logger:
+    def __init__(self):
+        self.log_dir = Path('logs')
+        self.log_dir.mkdir(exist_ok=True)
+        self.log_file = self.log_dir / f"trading_log_{datetime.now().strftime('%Y-%m-%d')}.txt"
+        self.terminal = sys.stdout
+        self.log = open(self.log_file, 'a')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
 
 def main():
+    # Set up logging
+    sys.stdout = Logger()
+    
     # Initialize the trading advisor with $1000 starting balance
     advisor = TradingAdvisor(initial_balance=1000)
     
@@ -82,6 +105,7 @@ def main():
             value = shares * advisor.get_current_price(symbol)
             print(f"{symbol}: {shares:.4f} shares (${value:.2f})")
     print("\nTrade history and analysis data saved in the 'data' directory")
+    print(f"Today's analysis log saved in: {sys.stdout.log_file}")
 
 if __name__ == "__main__":
     main()

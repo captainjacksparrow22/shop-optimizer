@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from ta.trend import SMAIndicator, EMAIndicator, ADXIndicator, MACD
 from ta.momentum import RSIIndicator, StochasticOscillator
 from ta.volatility import BollingerBands, AverageTrueRange
-from ta.volume import MFIIndicator, OnBalanceVolumeIndicator
+from ta.volume import MFIIndicator, OnBalanceVolumeIndicator, VolumeWeightedAveragePrice
 import json
 from pathlib import Path
 
@@ -70,6 +70,9 @@ class TradingAdvisor:
             # Volume Indicators
             df['MFI'] = MFIIndicator(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume']).money_flow_index()
             df['OBV'] = OnBalanceVolumeIndicator(close=df['Close'], volume=df['Volume']).on_balance_volume()
+            # VWAP
+            vwap = VolumeWeightedAveragePrice(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume'])
+            df['VWAP'] = vwap.volume_weighted_average_price()
             
         except Exception as e:
             print(f"Warning: Error calculating some indicators for {symbol}: {str(e)}")
@@ -82,6 +85,9 @@ class TradingAdvisor:
                 bb = BollingerBands(close=df['Close'])
                 df['BB_upper'] = bb.bollinger_hband()
                 df['BB_lower'] = bb.bollinger_lband()
+            if 'VWAP' not in df.columns:
+                vwap = VolumeWeightedAveragePrice(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume'])
+                df['VWAP'] = vwap.volume_weighted_average_price()
         
         # Save data to CSV
         filename = self.data_dir / f'{symbol}_data.csv'
@@ -96,8 +102,6 @@ class TradingAdvisor:
     def analyze_symbol(self, symbol):
         """Enhanced analysis for swing trading"""
         df = self.fetch_data(symbol)
-        
-        # Get recent data points
         latest = df.iloc[-1]
         prev = df.iloc[-2]
         
@@ -124,6 +128,9 @@ class TradingAdvisor:
         # Volatility Analysis
         volatility_status = 'HIGH' if latest['ATR'] > df['ATR'].mean() * 1.2 else 'LOW' if latest['ATR'] < df['ATR'].mean() * 0.8 else 'MODERATE'
         
+        # VWAP Analysis
+        vwap_signal = 'above' if latest['Close'] > latest['VWAP'] else 'below' if latest['Close'] < latest['VWAP'] else 'at'
+        
         # Combined Signals
         signals = {
             'trend': trend_score,
@@ -140,6 +147,8 @@ class TradingAdvisor:
         score += volume_score
         score += 1 if signals['macd'] == 'bullish' else -1
         score += 1 if signals['bb_position'] == 'oversold' else -1 if signals['bb_position'] == 'overbought' else 0
+        vwap_score = 1 if latest['Close'] > latest['VWAP'] else -1
+        score += vwap_score  # Integrate VWAP into the total score
         
         # Normalize probability (0 to 1)
         max_score = 7  # Maximum possible score

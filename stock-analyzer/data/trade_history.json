@@ -25,5 +25,14 @@
         "price": 117440.1015625,
         "shares": 0.0034059916048959265,
         "balance_after": 600.0
+    },
+    {
+        "timestamp": "2025-07-16T01:16:08.869275",
+        "symbol": "BTC-USD",
+        "action": "buy",
+        "amount": 400.0,
+        "price": 117321.28125,
+        "shares": 0.003409441115356043,
+        "balance_after": 600.0
     }
 ]
