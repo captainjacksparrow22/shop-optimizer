@@ -16,5 +16,23 @@
         "price": 84.83000183105469,
         "shares": 2.8291877262713965,
         "balance_after": 360.0
+    },
+    {
+        "timestamp": "2025-07-16T08:37:24.861771",
+        "symbol": "BTC-USD",
+        "action": "buy",
+        "amount": 200.0,
+        "price": 118849.3671875,
+        "shares": 0.001682802397125721,
+        "balance_after": 800.0
+    },
+    {
+        "timestamp": "2025-07-16T08:37:27.737015",
+        "symbol": "TQQQ",
+        "action": "buy",
+        "amount": 320.0,
+        "price": 84.83000183105469,
+        "shares": 3.772250301695195,
+        "balance_after": 480.0
     }
 ]

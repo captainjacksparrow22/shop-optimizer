@@ -9,18 +9,53 @@ from ta.volatility import BollingerBands, AverageTrueRange
 from ta.volume import MFIIndicator, OnBalanceVolumeIndicator, VolumeWeightedAveragePrice
 import json
 from pathlib import Path
+import logging
 
 class TradingAdvisor:
-    def __init__(self, initial_balance=1000):
+    def __init__(self, initial_balance=1000.0):
         self.initial_balance = initial_balance
-        self.current_balance = initial_balance
-        self.portfolio = {}
-        self.data_dir = Path('data')
+        self.balance = initial_balance
+        self.positions = {}
+        self.portfolio_value = initial_balance
+        self.daily_pl = 0
+        
+        self.base_path = Path(r'C:\Users\Nathan\Documents\Python\shop-optimizer\stock-analyzer')
+        self.data_dir = self.base_path / 'data'
         self.data_dir.mkdir(exist_ok=True)
+        self.portfolio_file = self.data_dir / 'portfolio.json'
         self.trade_history_file = self.data_dir / 'trade_history.json'
-        self.load_trade_history()
+        self.log_dir = self.base_path / 'logs'
+        self.log_dir.mkdir(exist_ok=True)
+        self.log_file = self.log_dir / f'trading_log_{datetime.now().strftime("%Y-%m-%d")}.txt'
+        self._configure_logging()
+        self.load_portfolio()
+
+    def _configure_logging(self):
+        """Configure logging to file and console."""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(message)s',
+            handlers=[
+                logging.FileHandler(self.log_file, mode='a', encoding='utf-8'),
+                logging.StreamHandler()
+            ]
+        )
+
+    def load_portfolio(self):
+        """Load portfolio from a JSON file."""
+        if self.portfolio_file.exists():
+            with open(self.portfolio_file, 'r') as f:
+                self.positions = json.load(f)
+        else:
+            self.positions = {}
+
+    def save_portfolio(self):
+        """Save portfolio to a JSON file."""
+        with open(self.portfolio_file, 'w') as f:
+            json.dump(self.positions, f, indent=4)
 
     def load_trade_history(self):
+        """Load trade history from a JSON file."""
         if self.trade_history_file.exists():
             with open(self.trade_history_file, 'r') as f:
                 self.trade_history = json.load(f)
@@ -28,6 +63,7 @@ class TradingAdvisor:
             self.trade_history = []
 
     def save_trade_history(self):
+        """Save trade history to a JSON file."""
         with open(self.trade_history_file, 'w') as f:
             json.dump(self.trade_history, f, indent=4)
 
@@ -265,42 +301,125 @@ class TradingAdvisor:
         self.save_trade_history()
         return trade
 
-    def get_portfolio_value(self):
-        """Calculate total portfolio value"""
-        total_value = self.current_balance
+    def update_portfolio_value(self, symbol_prices):
+        """Update the value of current holdings based on latest prices and calculate P/L."""
+        self.portfolio_value = self.balance
+        unrealized_pl = 0
+        for symbol, position in self.positions.items():
+            if symbol in symbol_prices:
+                current_price = symbol_prices[symbol]
+                current_value = position['shares'] * current_price
+                investment_cost = position['investment']
+                position_pl = current_value - investment_cost
+                unrealized_pl += position_pl
+                self.portfolio_value += current_value
         
-        for symbol, shares in self.portfolio.items():
-            if shares > 0:
-                df = self.fetch_data(symbol)
-                current_price = df.iloc[-1]['Close']
-                total_value += shares * current_price
-        
-        return total_value
+        self.daily_pl = self.portfolio_value - self.initial_balance
+        return unrealized_pl
 
-    def plot_analysis(self, symbol):
-        """Create an interactive plot of the analysis"""
-        df = self.fetch_data(symbol)
+    def execute_trade(self, symbol, recommendation, price, reasoning):
+        """Execute a paper trade based on the recommendation."""
+        action = 'buy' if recommendation == 'BUY' else 'sell'
+        investment_amount = self.balance * 0.1  # Invest 10% of balance
         
-        fig = go.Figure()
+        if action == 'buy':
+            if investment_amount > self.balance:
+                logging.warning(f"Not enough balance to invest ${investment_amount:.2f} in {symbol}. Skipping trade.")
+                return
+
+            shares = investment_amount / price
+            self.positions[symbol] = self.positions.get(symbol, {'shares': 0, 'investment': 0})
+            self.positions[symbol]['shares'] += shares
+            self.positions[symbol]['investment'] += investment_amount
+            self.balance -= investment_amount
+            trade = {
+                'timestamp': datetime.now().isoformat(),
+                'symbol': symbol,
+                'action': 'buy',
+                'amount': investment_amount,
+                'price': price,
+                'shares': shares,
+                'balance_after': self.balance
+            }
+        else:  # sell
+            if symbol not in self.positions or self.positions[symbol]['shares'] == 0:
+                logging.info(f"No position in {symbol} to sell.")
+                return
+            
+            shares_to_sell = self.positions[symbol]['shares']  # Sell all shares
+            amount = shares_to_sell * price
+            self.balance += amount
+            self.positions.pop(symbol) # Remove position after selling
+            trade = {
+                'timestamp': datetime.now().isoformat(),
+                'symbol': symbol,
+                'action': 'sell',
+                'amount': amount,
+                'price': price,
+                'shares': shares_to_sell,
+                'balance_after': self.balance
+            }
         
-        # Add candlestick chart
-        fig.add_trace(go.Candlestick(
-            x=df.index,
-            open=df['Open'],
-            high=df['High'],
-            low=df['Low'],
-            close=df['Close'],
-            name='Price'
-        ))
+        self.save_portfolio()
+        self.log_trade(trade)
+
+    def analyze(self, symbols):
+        """Analyze the given symbols and update portfolio based on recommendations."""
+        logging.info("\nAnalyzing market conditions...")
+
+        symbol_prices = {symbol: yf.Ticker(symbol).history(period='1d')['Close'].iloc[-1] for symbol in symbols}
+
+        for symbol in symbols:
+            try:
+                logging.info(f"\n==================================================")
+                logging.info(f"{symbol} Swing Trade Analysis:")
+                data = self.fetch_data(symbol)
+                analysis = self.analyze_symbol(symbol)
+                recommendation = analysis['recommendation']
+                current_price = analysis['current_price']
+                probability = analysis['buy_probability']
+                reasoning = analysis['trade_reasoning']
+                
+                # Log the analysis result
+                logging.info(f"\nAnalysis for {symbol}:")
+                logging.info(f"Current Price: ${current_price:.2f}")
+                logging.info(f"Recommendation: {recommendation}")
+                logging.info(f"Buy Probability: {probability:.2%}")
+                logging.info(f"Reasoning: {reasoning}")
+                
+                # Execute trade if probability is high enough
+                if probability > 0.7 and recommendation == 'BUY':
+                    self.execute_trade(symbol, recommendation, current_price, reasoning)
+                elif recommendation == 'SELL' and symbol in self.positions:
+                     self.execute_trade(symbol, recommendation, current_price, reasoning)
+
+            except Exception as e:
+                logging.error(f"Error analyzing {symbol}: {e}")
         
-        # Add indicators
-        fig.add_trace(go.Scatter(x=df.index, y=df['SMA_20'], name='SMA 20'))
-        fig.add_trace(go.Scatter(x=df.index, y=df['BB_upper'], name='BB Upper'))
-        fig.add_trace(go.Scatter(x=df.index, y=df['BB_lower'], name='BB Lower'))
+        unrealized_pl = self.update_portfolio_value(symbol_prices)
+        self.log_summary(unrealized_pl)
+
+    def log_trade(self, trade):
+        """Log a single trade."""
+        logging.info(f"Trade executed: {trade['action'].capitalize()} {trade['shares']:.4f} shares of {trade['symbol']} at ${trade['price']:.2f} each. Amount: ${trade['amount']:.2f}.")
+        logging.info(f"Portfolio updated: Balance ${self.balance:.2f}, Positions: {len(self.positions)}")
+
+    def log_summary(self, unrealized_pl):
+        """Log the end-of-day summary."""
+        logging.info("\n==================================================")
+        logging.info("=== End of Day Summary ===")
+        logging.info(f"Current portfolio value: ${self.portfolio_value:.2f}")
         
-        fig.update_layout(title=f'{symbol} Analysis', xaxis_title='Date', yaxis_title='Price')
-        
-        # Save the plot as HTML
-        plot_file = self.data_dir / f'{symbol}_analysis.html'
-        fig.write_html(str(plot_file))
-        return plot_file
+        daily_pl_percent = (self.daily_pl / self.initial_balance * 100) if self.initial_balance > 0 else 0
+        logging.info(f"Daily Unrealized P/L: ${unrealized_pl:.2f} ({daily_pl_percent:.2f}%)")
+
+        if self.positions:
+            logging.info("\nCurrent Positions:")
+            for symbol, position in self.positions.items():
+                if position['shares'] > 0:
+                    logging.info(f"{symbol}: {position['shares']} shares")
+        else:
+            logging.info("No open positions.")
+
+        # Add timestamp to the log
+        logging.info(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}")

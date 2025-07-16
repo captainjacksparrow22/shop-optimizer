@@ -1,4 +1,3 @@
-
 === Swing Trading Analysis for 2025-07-16 ===
 Starting portfolio value: $1000.00
 
@@ -72,3 +71,44 @@ TQQQ: 2.8292 shares ($239.96)
 
 Trade history and analysis data saved in the 'data' directory
 Today's analysis log saved in: logs\trading_log_2025-07-16.txt
+
+Analyzing market conditions...
+
+==================================================
+BTC-USD Swing Trade Analysis:
+
+Analysis for BTC-USD:
+Current Price: $118,905.05
+Recommendation: BUY
+Buy Probability: 92.86%
+Reasoning: Strong buy signal (92.86% probability) based on positive trend, strong volume. Risk level: HIGH
+Trade executed: Buy 0.0008 shares of BTC-USD at $118,905.05 each. Amount: $100.00.
+Portfolio updated: Balance $800.00, Positions: 2
+
+==================================================
+TQQQ Swing Trade Analysis:
+
+Analysis for TQQQ:
+Current Price: $84.83
+Recommendation: BUY
+Buy Probability: 64.29%
+Reasoning: Strong buy signal (64.29% probability) based on positive trend, strong volume. Risk level: MODERATE
+
+==================================================
+SQQQ Swing Trade Analysis:
+
+Analysis for SQQQ:
+Current Price: $19.13
+Recommendation: SELL
+Buy Probability: 21.43%
+Reasoning: Sell signal (21.43% probability) due to negative trend, bearish momentum, weak volume. Risk level: MODERATE
+
+==================================================
+=== End of Day Summary ===
+Current portfolio value: $1005.44
+Daily Unrealized P/L: $5.43 (0.54%)
+
+Current Positions:
+BTC-USD: 0.0042 shares ($505.45)
+TQQQ: 2.8292 shares ($239.96)
+Timestamp: 2025-07-16 10:35:00 EST
