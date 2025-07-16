@@ -1,0 +1,29 @@
+[
+    {
+        "timestamp": "2025-07-16T00:54:23.416908",
+        "symbol": "BTC-USD",
+        "action": "buy",
+        "amount": 400.0,
+        "price": 117458.140625,
+        "shares": 0.003405468517308227,
+        "balance_after": 600.0
+    },
+    {
+        "timestamp": "2025-07-16T00:56:19.575618",
+        "symbol": "BTC-USD",
+        "action": "buy",
+        "amount": 400.0,
+        "price": 117475.0859375,
+        "shares": 0.0034049772920601317,
+        "balance_after": 600.0
+    },
+    {
+        "timestamp": "2025-07-16T01:05:50.478674",
+        "symbol": "BTC-USD",
+        "action": "buy",
+        "amount": 400.0,
+        "price": 117440.1015625,
+        "shares": 0.0034059916048959265,
+        "balance_after": 600.0
+    }
+]
