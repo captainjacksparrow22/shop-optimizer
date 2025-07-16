@@ -7,7 +7,7 @@ from pathlib import Path
 
 class Logger:
     def __init__(self):
-        self.log_dir = Path('logs')
+        self.log_dir = Path(r'C:\Users\Nathan\Documents\Python\shop-optimizer\stock-analyzer\logs')
         self.log_dir.mkdir(exist_ok=True)
         self.log_file = self.log_dir / f"trading_log_{datetime.now().strftime('%Y-%m-%d')}.txt"
         self.terminal = sys.stdout

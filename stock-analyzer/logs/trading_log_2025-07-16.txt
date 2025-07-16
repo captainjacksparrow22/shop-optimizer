@@ -6,8 +6,8 @@ Analyzing market conditions...
 
 ==================================================
 BTC-USD Swing Trade Analysis:
-Current Price: $117321.28
-Buy Probability: 85.71%
+Current Price: $117310.52
+Buy Probability: 92.86%
 Recommendation: BUY
 Risk Level: MODERATE
 
@@ -22,13 +22,13 @@ Bitcoin shows high overnight volatility. Set tight stops 2-3% below entry.
 Technical Analysis Plot saved to: data\BTC-USD_analysis.html
 
 Executed paper trade: Bought $400.00 of BTC-USD
-Trade Reasoning: Strong buy signal (85.71% probability) based on positive trend, strong volume. Risk level: MODERATE
+Trade Reasoning: Strong buy signal (92.86% probability) based on positive trend, strong volume. Risk level: MODERATE
 
 ==================================================
 TQQQ Swing Trade Analysis:
 Current Price: $84.83
-Buy Probability: 57.14%
-Recommendation: HOLD
+Buy Probability: 64.29%
+Recommendation: BUY
 Risk Level: MODERATE
 
 Key Metrics:
@@ -41,10 +41,13 @@ Swing Trade Advice:
 
 Technical Analysis Plot saved to: data\TQQQ_analysis.html
 
+Executed paper trade: Bought $240.00 of TQQQ
+Trade Reasoning: Strong buy signal (64.29% probability) based on positive trend, strong volume. Risk level: MODERATE
+
 ==================================================
 SQQQ Swing Trade Analysis:
 Current Price: $19.13
-Buy Probability: 28.57%
+Buy Probability: 21.43%
 Recommendation: SELL
 Risk Level: MODERATE
 
@@ -64,7 +67,8 @@ Current portfolio value: $1000.00
 Daily P/L: $0.00 (0.00%)
 
 Current Positions:
-BTC-USD: 0.0034 shares ($400.08)
+BTC-USD: 0.0034 shares ($400.01)
+TQQQ: 2.8292 shares ($239.96)
 
 Trade history and analysis data saved in the 'data' directory
 Today's analysis log saved in: logs\trading_log_2025-07-16.txt
